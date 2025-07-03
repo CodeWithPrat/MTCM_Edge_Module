@@ -195,10 +195,6 @@ const StatsCard = ({ icon: Icon, label, value, trend, color }) => (
           <p className="text-2xl font-bold text-white">{value}</p>
         </div>
       </div>
-      <div className={`flex items-center space-x-1 ${trend > 0 ? 'text-green-400' : 'text-red-400'}`}>
-        <TrendingUp className="w-4 h-4" />
-        <span className="text-sm font-semibold">{trend > 0 ? '+' : ''}{trend}%</span>
-      </div>
     </div>
   </div>
 );
@@ -309,7 +305,7 @@ const Temperature = () => {
       <div className="relative z-10 p-6">
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Header */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-12">
+          <div className="flex flex-col lg:flex-row items-center lg:items-center justify-between mb-12">
             <div className="mb-6 lg:mb-0">
               <h1 className="text-5xl lg:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-200 via-gray-400 to-gray-600 mb-4">
                 Temperature Hub
@@ -334,23 +330,21 @@ const Temperature = () => {
               icon={Activity}
               label="Average Temperature"
               value={`${avgTemp}°C`}
-              trend={2.3}
               color="from-gray-600/30 to-gray-700/30"
             />
             <StatsCard 
               icon={Zap}
               label="Active Sensors"
               value="8"
-              trend={0}
               color="from-gray-600/30 to-gray-700/30"
             />
-            <StatsCard 
+            {/* <StatsCard 
               icon={TrendingUp}
               label="System Health"
               value="100%"
               trend={0}
               color="from-gray-600/30 to-gray-700/30"
-            />
+            /> */}
           </div>
 
           {/* RTD Sensors Section */}

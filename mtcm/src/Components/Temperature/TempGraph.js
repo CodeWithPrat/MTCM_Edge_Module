@@ -1,60 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { RefreshCw, TrendingUp, Activity, Thermometer, Zap, Calendar, Clock, BarChart3 } from 'lucide-react';
+import { RefreshCw, TrendingUp, Activity, Thermometer, Zap, Calendar, Clock, BarChart3, AlertCircle } from 'lucide-react';
 
 const TempGraph = () => {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState('00:00');
   const [endTime, setEndTime] = useState('23:59');
   const [graphData, setGraphData] = useState(null);
+  const [filteredData, setFilteredData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [graphType, setGraphType] = useState('rtd');
   const [selectedSensor, setSelectedSensor] = useState('rtd1');
   const [isAnimating, setIsAnimating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
-  const fetchGraphData = async () => {
+  // Your actual API endpoint
+  const API_BASE_URL = 'https://mtcm-edge.online/Backend/tempgraph.php';
+
+  const fetchGraphData = useCallback(async () => {
     setLoading(true);
     setError(null);
     setIsAnimating(true);
     
     try {
-      // Simulate API call delay for animation effect
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const params = new URLSearchParams({
+        date: date
+      });
+
+      const response = await fetch(`${API_BASE_URL}?${params}`);
       
-      // Mock data generation
-      const timestamps = [];
-      const data = [];
-      
-      for (let i = 0; i < 24; i++) {
-        const hour = i.toString().padStart(2, '0');
-        const dataPoint = {
-          time: `${hour}:00`,
-          rtd1: Math.round((25 + Math.sin(i * 0.3) * 3 + Math.random() * 2) * 10) / 10,
-          rtd2: Math.round((26 + Math.cos(i * 0.2) * 2 + Math.random() * 1.5) * 10) / 10,
-          rtd3: Math.round((24 + Math.sin(i * 0.25) * 2.5 + Math.random() * 1.8) * 10) / 10,
-          rtd4: Math.round((27 + Math.cos(i * 0.35) * 1.5 + Math.random() * 1.2) * 10) / 10,
-          tc1: Math.round((28 + Math.sin(i * 0.4) * 3 + Math.random() * 2.2) * 10) / 10,
-          tc2: Math.round((29 + Math.cos(i * 0.3) * 2 + Math.random() * 1.7) * 10) / 10,
-          tc3: Math.round((27 + Math.sin(i * 0.35) * 2.5 + Math.random() * 1.9) * 10) / 10,
-          tc4: Math.round((28 + Math.cos(i * 0.25) * 1.5 + Math.random() * 1.4) * 10) / 10,
-        };
-        data.push(dataPoint);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      setGraphData(data);
+      const result = await response.json();
+      
+      if (!Array.isArray(result)) {
+        throw new Error('Invalid response format');
+      }
+      
+      // Process the data to ensure proper formatting
+      const processedData = result.map(item => ({
+        ...item,
+        time: new Date(item.created_at).toLocaleTimeString('en-US', { hour12: false }),
+        // Ensure all sensor values are numbers
+        rtd1: item.rtd1 ? parseFloat(item.rtd1) : null,
+        rtd2: item.rtd2 ? parseFloat(item.rtd2) : null,
+        rtd3: item.rtd3 ? parseFloat(item.rtd3) : null,
+        rtd4: item.rtd4 ? parseFloat(item.rtd4) : null,
+        tc1: item.tc1 ? parseFloat(item.tc1) : null,
+        tc2: item.tc2 ? parseFloat(item.tc2) : null,
+        tc3: item.tc3 ? parseFloat(item.tc3) : null,
+        tc4: item.tc4 ? parseFloat(item.tc4) : null,
+      }));
+      
+      setGraphData(processedData);
+      setLastUpdated(new Date());
+      
     } catch (err) {
-      setError('Connection error');
+      setError(err.message);
       console.error('Error fetching graph data:', err);
     } finally {
       setLoading(false);
       setTimeout(() => setIsAnimating(false), 500);
     }
-  };
+  }, [date]);
 
+  // Filter data based on time range
+  useEffect(() => {
+    if (!graphData) {
+      setFilteredData(null);
+      return;
+    }
+
+    const filtered = graphData.filter(item => {
+      const itemTime = new Date(item.created_at);
+      const startDateTime = new Date(`${date}T${startTime}`);
+      const endDateTime = new Date(`${date}T${endTime}`);
+      
+      return itemTime >= startDateTime && itemTime <= endDateTime;
+    });
+
+    setFilteredData(filtered);
+  }, [graphData, date, startTime, endTime]);
+
+  // Auto-fetch data when date changes
   useEffect(() => {
     fetchGraphData();
-  }, [date, startTime, endTime, graphType, selectedSensor]);
+  }, [fetchGraphData]);
 
   const getSensorConfig = () => {
     if (graphType === 'rtd') {
@@ -114,7 +148,7 @@ const TempGraph = () => {
                 style={{ backgroundColor: entry.color }}
               />
               <span className="text-white text-sm font-medium">
-                {entry.dataKey.toUpperCase()}: {entry.value}°C
+                {entry.dataKey.toUpperCase()}: {entry.value ? entry.value.toFixed(1) : 'N/A'}°C
               </span>
             </div>
           ))}
@@ -125,10 +159,23 @@ const TempGraph = () => {
   };
 
   const getStats = () => {
-    if (!graphData) return null;
+    if (!filteredData || filteredData.length === 0) return null;
     
     const sensors = config.sensors.map(sensor => {
-      const values = graphData.map(d => d[sensor.key]);
+      const values = filteredData
+        .map(d => d[sensor.key])
+        .filter(v => v !== null && v !== undefined && !isNaN(v));
+      
+      if (values.length === 0) {
+        return {
+          ...sensor,
+          avg: 0,
+          min: 0,
+          max: 0,
+          trend: 'neutral'
+        };
+      }
+      
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
       const min = Math.min(...values);
       const max = Math.max(...values);
@@ -136,9 +183,9 @@ const TempGraph = () => {
       return {
         ...sensor,
         avg: Math.round(avg * 10) / 10,
-        min,
-        max,
-        trend: values[values.length - 1] > values[0] ? 'up' : 'down'
+        min: Math.round(min * 10) / 10,
+        max: Math.round(max * 10) / 10,
+        trend: values.length > 1 ? (values[values.length - 1] > values[0] ? 'up' : 'down') : 'neutral'
       };
     });
     
@@ -148,7 +195,7 @@ const TempGraph = () => {
   const stats = getStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-gray-900 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 relative overflow-hidden">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -183,6 +230,11 @@ const TempGraph = () => {
               </h1>
             </div>
             <p className="text-gray-400 text-lg">Real-time temperature data visualization</p>
+            {lastUpdated && (
+              <p className="text-gray-500 text-sm mt-2">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </p>
+            )}
           </div>
 
           {/* Stats Cards */}
@@ -196,7 +248,7 @@ const TempGraph = () => {
                 >
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-white font-semibold text-lg">{stat.label}</h3>
-                    <TrendingUp className={`w-5 h-5 ${stat.trend === 'up' ? 'text-green-300' : 'text-red-300 rotate-180'}`} />
+                    <TrendingUp className={`w-5 h-5 ${stat.trend === 'up' ? 'text-green-300' : stat.trend === 'down' ? 'text-red-300 rotate-180' : 'text-gray-300'}`} />
                   </div>
                   <div className="text-3xl font-bold text-white mb-2">{stat.avg}°C</div>
                   <div className="flex justify-between text-sm text-white/70">
@@ -214,7 +266,7 @@ const TempGraph = () => {
               <div className="space-y-2">
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
                   <Calendar className="w-4 h-4" />
-                  <span>Date</span>
+                  <span>Select Date</span>
                 </label>
                 <input
                   type="date"
@@ -280,12 +332,12 @@ const TempGraph = () => {
                 <button
                   onClick={fetchGraphData}
                   disabled={loading}
-                  className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
                     loading ? 'animate-pulse' : ''
                   }`}
                 >
                   <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-                  <span>{loading ? 'Loading...' : 'Update'}</span>
+                  <span>{loading ? 'Loading...' : 'Refresh'}</span>
                 </button>
               </div>
             </div>
@@ -317,9 +369,16 @@ const TempGraph = () => {
 
           {/* Graph */}
           <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl animate-slide-up">
-            <div className="flex items-center space-x-3 mb-6">
-              {config.icon}
-              <h2 className="text-2xl font-bold text-white">{config.title}</h2>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                {config.icon}
+                <h2 className="text-2xl font-bold text-white">{config.title}</h2>
+              </div>
+              {filteredData && (
+                <span className="text-sm text-gray-400">
+                  {filteredData.length} data points
+                </span>
+              )}
             </div>
             
             {loading ? (
@@ -331,18 +390,19 @@ const TempGraph = () => {
               </div>
             ) : error ? (
               <div className="text-center py-12 animate-fade-in">
-                <div className="text-red-400 text-lg mb-4">Error loading graph data</div>
+                <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                <div className="text-red-400 text-lg mb-4">{error}</div>
                 <button
                   onClick={fetchGraphData}
                   className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-6 py-3 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  Retry
+                  Try Again
                 </button>
               </div>
-            ) : graphData ? (
+            ) : filteredData && filteredData.length > 0 ? (
               <div className={`h-96 w-full transition-all duration-1000 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={graphData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <AreaChart data={filteredData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                     <defs>
                       {config.sensors.map((sensor, index) => (
                         <linearGradient key={sensor.key} id={`gradient-${sensor.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -383,6 +443,7 @@ const TempGraph = () => {
                         name={sensor.label}
                         animationDuration={1500}
                         animationDelay={index * 200}
+                        connectNulls={false}
                       />
                     ))}
                   </AreaChart>
@@ -392,6 +453,7 @@ const TempGraph = () => {
               <div className="text-center py-12 text-gray-400 animate-fade-in">
                 <Activity className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <div className="text-lg">No data available</div>
+                <p className="text-sm mt-2">Try selecting a different date or time range</p>
               </div>
             )}
           </div>
