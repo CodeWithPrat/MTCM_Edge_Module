@@ -5,6 +5,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { ChevronLeft, ChevronRight, Menu, X, Thermometer, Zap, Activity, Cpu, BarChart3, Settings, Home, Radio, Cable, Shield, Wifi, Circle } from "lucide-react"
 
 import Tabs from "./Components/Temperature/Tabs";
+import MSTab from "./Components/MachineStatus/MSTabs";
 
 import CMTILogo from "./Images/logos/CMTILogo.png"
 import MHILogo from "./Images/logos/MHI3.png"
@@ -978,7 +979,7 @@ const App = () => {
             {/* Placeholder routes */}
             {[
               { path: "/temperature", element: <Tabs /> },
-              { path: "/energy", name: "Energy Management" },
+              { path: "/energy", element: <MSTab /> },
               { path: "/vibration", name: "Vibration Analysis" },
               { path: "/digital-io", name: "Digital I/O" },
               { path: "/etop-io", name: "ETOP Digital I/O" },
