@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { ChevronLeft, ChevronRight, Menu, X, Thermometer, Zap, Activity, Cpu, BarChart3, Settings, Home, Radio, Cable, Shield, Wifi, Circle } from "lucide-react"
 
-import Temperature from "./Components/Temperature/Temperature";
 import Tabs from "./Components/Temperature/Tabs";
 
 import CMTILogo from "./Images/logos/CMTILogo.png"
@@ -925,16 +924,16 @@ const App = () => {
         {/* Fixed Logos */}
         {/* CMTI badge (left) */}
         <motion.div
-          className="fixed top-6 left-6 lg:left-96 z-30"
+          className="fixed top-6 left-6 lg:left-80 z-30"
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-3">
+          <div className="">
             <img
               src={CMTILogo}
               alt="CMTI logo"
-              className="h-10 w-auto"        /* tweak size here */
+              className="h-16 w-auto"        /* tweak size here */
               draggable={false}
             />
           </div>
@@ -959,7 +958,7 @@ const App = () => {
 
         <Navigation isOpen={navOpen} setIsOpen={setNavOpen} />
 
-        <main className="lg:ml-80 relative z-10">
+        <main className="lg:ml-40 relative z-10">
           <Routes>
             <Route
               path="/"

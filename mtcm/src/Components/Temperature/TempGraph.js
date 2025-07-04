@@ -10,7 +10,7 @@ const TempGraph = () => {
   const [filteredData, setFilteredData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [graphType, setGraphType] = useState('rtd');
+  const [graphType, setGraphType] = useState('all');
   const [selectedSensor, setSelectedSensor] = useState('rtd1');
   const [isAnimating, setIsAnimating] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -22,24 +22,24 @@ const TempGraph = () => {
     setLoading(true);
     setError(null);
     setIsAnimating(true);
-    
+
     try {
       const params = new URLSearchParams({
         date: date
       });
 
       const response = await fetch(`${API_BASE_URL}?${params}`);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const result = await response.json();
-      
+
       if (!Array.isArray(result)) {
         throw new Error('Invalid response format');
       }
-      
+
       // Process the data to ensure proper formatting
       const processedData = result.map(item => ({
         ...item,
@@ -54,10 +54,10 @@ const TempGraph = () => {
         tc3: item.tc3 ? parseFloat(item.tc3) : null,
         tc4: item.tc4 ? parseFloat(item.tc4) : null,
       }));
-      
+
       setGraphData(processedData);
       setLastUpdated(new Date());
-      
+
     } catch (err) {
       setError(err.message);
       console.error('Error fetching graph data:', err);
@@ -78,7 +78,7 @@ const TempGraph = () => {
       const itemTime = new Date(item.created_at);
       const startDateTime = new Date(`${date}T${startTime}`);
       const endDateTime = new Date(`${date}T${endTime}`);
-      
+
       return itemTime >= startDateTime && itemTime <= endDateTime;
     });
 
@@ -91,15 +91,30 @@ const TempGraph = () => {
   }, [fetchGraphData]);
 
   const getSensorConfig = () => {
-    if (graphType === 'rtd') {
+    if (graphType === 'all') {
       return {
-        title: 'PT 100 RTD Sensors',
+        title: 'All Sensors',
+        icon: <Zap className="w-5 h-5" />,
+        sensors: [
+          { key: 'rtd1', label: 'RTD 1', color: '#1e40af', gradient: 'from-blue-800 to-blue-950' },
+          { key: 'rtd2', label: 'RTD 2', color: '#065f46', gradient: 'from-emerald-800 to-emerald-950' },
+          { key: 'rtd3', label: 'RTD 3', color: '#92400e', gradient: 'from-amber-800 to-amber-950' },
+          { key: 'rtd4', label: 'RTD 4', color: '#5b21b6', gradient: 'from-violet-800 to-violet-950' },
+          { key: 'tc1', label: 'TC 1', color: '#7f1d1d', gradient: 'from-red-800 to-red-950' },
+          { key: 'tc2', label: 'TC 2', color: '#7c2d12', gradient: 'from-orange-800 to-orange-950' },
+          { key: 'tc3', label: 'TC 3', color: '#78350f', gradient: 'from-amber-900 to-amber-950' },
+          { key: 'tc4', label: 'TC 4', color: '#064e3b', gradient: 'from-emerald-900 to-emerald-950' }
+        ]
+      };
+    } else if (graphType === 'rtd') {
+      return {
+        title: 'PT 100 RTD Sensors',
         icon: <Thermometer className="w-5 h-5" />,
         sensors: [
-          { key: 'rtd1', label: 'RTD 1', color: '#3b82f6', gradient: 'from-blue-500 to-blue-600' },
-          { key: 'rtd2', label: 'RTD 2', color: '#10b981', gradient: 'from-emerald-500 to-emerald-600' },
-          { key: 'rtd3', label: 'RTD 3', color: '#f59e0b', gradient: 'from-amber-500 to-amber-600' },
-          { key: 'rtd4', label: 'RTD 4', color: '#8b5cf6', gradient: 'from-violet-500 to-violet-600' }
+          { key: 'rtd1', label: 'RTD 1', color: '#1e40af', gradient: 'from-blue-800 to-blue-950' },
+          { key: 'rtd2', label: 'RTD 2', color: '#065f46', gradient: 'from-emerald-800 to-emerald-950' },
+          { key: 'rtd3', label: 'RTD 3', color: '#92400e', gradient: 'from-amber-800 to-amber-950' },
+          { key: 'rtd4', label: 'RTD 4', color: '#5b21b6', gradient: 'from-violet-800 to-violet-950' }
         ]
       };
     } else if (graphType === 'tc') {
@@ -107,24 +122,23 @@ const TempGraph = () => {
         title: 'Thermocouple Sensors',
         icon: <Zap className="w-5 h-5" />,
         sensors: [
-          { key: 'tc1', label: 'TC 1', color: '#dc2626', gradient: 'from-red-500 to-red-600' },
-          { key: 'tc2', label: 'TC 2', color: '#ea580c', gradient: 'from-orange-500 to-orange-600' },
-          { key: 'tc3', label: 'TC 3', color: '#d97706', gradient: 'from-amber-600 to-amber-700' },
-          { key: 'tc4', label: 'TC 4', color: '#059669', gradient: 'from-emerald-600 to-emerald-700' }
+          { key: 'tc1', label: 'TC 1', color: '#7f1d1d', gradient: 'from-red-800 to-red-950' },
+          { key: 'tc2', label: 'TC 2', color: '#7c2d12', gradient: 'from-orange-800 to-orange-950' },
+          { key: 'tc3', label: 'TC 3', color: '#78350f', gradient: 'from-amber-900 to-amber-950' },
+          { key: 'tc4', label: 'TC 4', color: '#064e3b', gradient: 'from-emerald-900 to-emerald-950' }
         ]
       };
     } else {
       const allSensors = [
-        { key: 'rtd1', label: 'RTD 1', color: '#3b82f6', gradient: 'from-blue-500 to-blue-600' },
-        { key: 'rtd2', label: 'RTD 2', color: '#10b981', gradient: 'from-emerald-500 to-emerald-600' },
-        { key: 'rtd3', label: 'RTD 3', color: '#f59e0b', gradient: 'from-amber-500 to-amber-600' },
-        { key: 'rtd4', label: 'RTD 4', color: '#8b5cf6', gradient: 'from-violet-500 to-violet-600' },
-        { key: 'tc1', label: 'TC 1', color: '#dc2626', gradient: 'from-red-500 to-red-600' },
-        { key: 'tc2', label: 'TC 2', color: '#ea580c', gradient: 'from-orange-500 to-orange-600' },
-        { key: 'tc3', label: 'TC 3', color: '#d97706', gradient: 'from-amber-600 to-amber-700' },
-        { key: 'tc4', label: 'TC 4', color: '#059669', gradient: 'from-emerald-600 to-emerald-700' }
+        { key: 'rtd1', label: 'RTD 1', color: '#1e40af', gradient: 'from-blue-800 to-blue-950' },
+        { key: 'rtd2', label: 'RTD 2', color: '#065f46', gradient: 'from-emerald-800 to-emerald-950' },
+        { key: 'rtd3', label: 'RTD 3', color: '#92400e', gradient: 'from-amber-800 to-amber-950' },
+        { key: 'rtd4', label: 'RTD 4', color: '#5b21b6', gradient: 'from-violet-800 to-violet-950' },
+        { key: 'tc1', label: 'TC 1', color: '#7f1d1d', gradient: 'from-red-800 to-red-950' },
+        { key: 'tc2', label: 'TC 2', color: '#7c2d12', gradient: 'from-orange-800 to-orange-950' },
+        { key: 'tc3', label: 'TC 3', color: '#78350f', gradient: 'from-amber-900 to-amber-950' },
+        { key: 'tc4', label: 'TC 4', color: '#064e3b', gradient: 'from-emerald-900 to-emerald-950' }
       ];
-      
       const sensor = allSensors.find(s => s.key === selectedSensor);
       return {
         title: `${sensor.label} Sensor`,
@@ -143,7 +157,7 @@ const TempGraph = () => {
           <p className="text-gray-300 text-sm mb-2">{`Time: ${label}`}</p>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center space-x-2">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
@@ -160,12 +174,12 @@ const TempGraph = () => {
 
   const getStats = () => {
     if (!filteredData || filteredData.length === 0) return null;
-    
+
     const sensors = config.sensors.map(sensor => {
       const values = filteredData
         .map(d => d[sensor.key])
         .filter(v => v !== null && v !== undefined && !isNaN(v));
-      
+
       if (values.length === 0) {
         return {
           ...sensor,
@@ -175,11 +189,11 @@ const TempGraph = () => {
           trend: 'neutral'
         };
       }
-      
+
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
       const min = Math.min(...values);
       const max = Math.max(...values);
-      
+
       return {
         ...sensor,
         avg: Math.round(avg * 10) / 10,
@@ -188,7 +202,7 @@ const TempGraph = () => {
         trend: values.length > 1 ? (values[values.length - 1] > values[0] ? 'up' : 'down') : 'neutral'
       };
     });
-    
+
     return sensors;
   };
 
@@ -202,7 +216,7 @@ const TempGraph = () => {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute top-1/2 left-1/2 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
-      
+
       {/* Floating particles */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(20)].map((_, i) => (
@@ -275,7 +289,7 @@ const TempGraph = () => {
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 hover:bg-gray-800/70"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
                   <Clock className="w-4 h-4" />
@@ -288,7 +302,7 @@ const TempGraph = () => {
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 hover:bg-gray-800/70"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
                   <Clock className="w-4 h-4" />
@@ -301,7 +315,7 @@ const TempGraph = () => {
                   className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 hover:bg-gray-800/70"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
                   <BarChart3 className="w-4 h-4" />
@@ -309,6 +323,7 @@ const TempGraph = () => {
                 </label>
                 <div className="flex space-x-1">
                   {[
+                    { value: 'all', label: 'All', color: 'from-blue-500 to-blue-600' },
                     { value: 'rtd', label: 'RTD', color: 'from-blue-500 to-blue-600' },
                     { value: 'tc', label: 'TC', color: 'from-red-500 to-red-600' },
                     { value: 'individual', label: 'Single', color: 'from-purple-500 to-purple-600' }
@@ -316,25 +331,23 @@ const TempGraph = () => {
                     <button
                       key={type.value}
                       onClick={() => setGraphType(type.value)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                        graphType === type.value
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${graphType === type.value
                           ? `bg-gradient-to-r ${type.color} text-white shadow-lg scale-105`
                           : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700/70 hover:scale-105'
-                      }`}
+                        }`}
                     >
                       {type.label}
                     </button>
                   ))}
                 </div>
               </div>
-              
+
               <div className="flex items-end">
                 <button
                   onClick={fetchGraphData}
                   disabled={loading}
-                  className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-                    loading ? 'animate-pulse' : ''
-                  }`}
+                  className={`w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${loading ? 'animate-pulse' : ''
+                    }`}
                 >
                   <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                   <span>{loading ? 'Loading...' : 'Refresh'}</span>
@@ -380,7 +393,7 @@ const TempGraph = () => {
                 </span>
               )}
             </div>
-            
+
             {loading ? (
               <div className="flex items-center justify-center h-96">
                 <div className="relative">
@@ -406,28 +419,28 @@ const TempGraph = () => {
                     <defs>
                       {config.sensors.map((sensor, index) => (
                         <linearGradient key={sensor.key} id={`gradient-${sensor.key}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={sensor.color} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={sensor.color} stopOpacity={0.1}/>
+                          <stop offset="5%" stopColor={sensor.color} stopOpacity={0.8} />
+                          <stop offset="95%" stopColor={sensor.color} stopOpacity={0.1} />
                         </linearGradient>
                       ))}
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                    <XAxis 
-                      dataKey="time" 
-                      stroke="#9CA3AF" 
+                    <XAxis
+                      dataKey="time"
+                      stroke="#9CA3AF"
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
                     />
-                    <YAxis 
-                      stroke="#9CA3AF" 
+                    <YAxis
+                      stroke="#9CA3AF"
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
                       label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fill: '#9CA3AF' } }}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend 
+                    <Legend
                       wrapperStyle={{ paddingTop: '20px' }}
                       iconType="circle"
                     />
@@ -459,7 +472,7 @@ const TempGraph = () => {
           </div>
         </div>
       </div>
-      
+
       <style jsx>{`
         @keyframes fade-in {
           from {

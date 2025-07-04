@@ -302,7 +302,7 @@ const Temperature = () => {
         ))}
       </div>
       
-      <div className="relative z-10 p-6">
+      <div className="relative z-10">
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Header */}
           <div className="flex flex-col lg:flex-row items-center lg:items-center justify-between mb-12">
