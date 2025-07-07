@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Menu, X, Thermometer, Zap, Activity, Cpu, Ba
 
 import Tabs from "./Components/Temperature/Tabs";
 import MSTab from "./Components/MachineStatus/MSTabs";
+import Vibration from "./Components/Vibration/Vibration";
 
 import CMTILogo from "./Images/logos/CMTILogo.png"
 import MHILogo from "./Images/logos/MHI3.png"
@@ -1142,7 +1143,7 @@ const App = () => {
             {[
               { path: "/temperature", element: <Tabs /> },
               { path: "/energy", element: <MSTab /> },
-              { path: "/vibration", name: "Vibration Analysis" },
+              { path: "/vibration", element: <Vibration /> },
               { path: "/digital-io", name: "Digital I/O" },
               { path: "/etop-io", name: "ETOP Digital I/O" },
               { path: "/sensors", name: "Sensors" },
