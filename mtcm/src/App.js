@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight, Menu, X, Thermometer, Zap, Activity, Cpu, Ba
 import Tabs from "./Components/Temperature/Tabs";
 import MSTab from "./Components/MachineStatus/MSTabs";
 import Vibration from "./Components/Vibration/Vibration";
+import DIO from "./Components/Digital/DIO";
+import ETOP from "./Components/E-TOP/ETOP";
 
 import CMTILogo from "./Images/logos/CMTILogo.png"
 import MHILogo from "./Images/logos/MHI3.png"
@@ -1144,8 +1146,8 @@ const App = () => {
               { path: "/temperature", element: <Tabs /> },
               { path: "/energy", element: <MSTab /> },
               { path: "/vibration", element: <Vibration /> },
-              { path: "/digital-io", name: "Digital I/O" },
-              { path: "/etop-io", name: "ETOP Digital I/O" },
+              { path: "/digital-io", element: <DIO /> },
+              { path: "/etop-io", element: <ETOP /> },
               { path: "/sensors", name: "Sensors" },
               { path: "/oee", name: "OEE Calculator" },
               { path: "/reports", name: "Report Generation" },
