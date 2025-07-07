@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -16,6 +16,90 @@ import product3 from "./Images/product/product3.PNG"
 import product4 from "./Images/product/product4.PNG"
 import product5 from "./Images/product/product5.PNG"
 import product6 from "./Images/product/product6.PNG"
+
+// Add this before your ReactDOM.render() call
+window.addEventListener('error', function(e) {
+  if (e.message.includes('ResizeObserver')) {
+    e.preventDefault();
+    console.warn('ResizeObserver error suppressed:', e.message);
+    return false;
+  }
+});
+
+// Global ResizeObserver Error Suppression - Applied immediately
+const suppressResizeObserverErrors = (() => {
+  let isInitialized = false;
+  
+  return () => {
+    if (isInitialized) return;
+    isInitialized = true;
+
+    // Suppress console errors
+    const originalError = console.error;
+    console.error = (...args) => {
+      const message = args[0]?.toString() || '';
+      if (message.includes('ResizeObserver loop completed with undelivered notifications') ||
+          message.includes('ResizeObserver loop limit exceeded')) {
+        return;
+      }
+      originalError.apply(console, args);
+    };
+
+    // Handle window errors
+    const handleWindowError = (e) => {
+      if (e.message?.includes('ResizeObserver loop completed with undelivered notifications') ||
+          e.message?.includes('ResizeObserver loop limit exceeded')) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    window.addEventListener('error', handleWindowError);
+    window.addEventListener('unhandledrejection', (e) => {
+      if (e.reason?.message?.includes('ResizeObserver')) {
+        e.preventDefault();
+        return false;
+      }
+    });
+
+    // Override ResizeObserver to catch errors at the source
+    const OriginalResizeObserver = window.ResizeObserver;
+    window.ResizeObserver = class extends OriginalResizeObserver {
+      constructor(callback) {
+        super((entries, observer) => {
+          try {
+            callback(entries, observer);
+          } catch (error) {
+            if (error.message?.includes('ResizeObserver loop completed with undelivered notifications') ||
+                error.message?.includes('ResizeObserver loop limit exceeded')) {
+              return;
+            }
+            throw error;
+          }
+        });
+      }
+    };
+
+    // Additional protection with requestAnimationFrame
+    const originalRAF = window.requestAnimationFrame;
+    window.requestAnimationFrame = (callback) => {
+      return originalRAF(() => {
+        try {
+          callback();
+        } catch (error) {
+          if (error.message?.includes('ResizeObserver')) {
+            return;
+          }
+          throw error;
+        }
+      });
+    };
+  };
+})();
+
+// Initialize error suppression immediately
+suppressResizeObserverErrors();
 
 // iOS-style Global Styles
 const iOSStyles = `
@@ -186,6 +270,50 @@ const iOSStyles = `
   }
 `;
 
+// Enhanced Error Boundary
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    // Don't treat ResizeObserver errors as component errors
+    if (error.message?.includes('ResizeObserver')) {
+      return { hasError: false };
+    }
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    // Only log non-ResizeObserver errors
+    if (!error.message?.includes('ResizeObserver')) {
+      console.error("ErrorBoundary caught an error:", error, errorInfo);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-screen bg-red-900/20 text-white p-8">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold">Something went wrong</h2>
+            <p className="text-white/70">Please refresh the page or try again later.</p>
+            <button
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Enhanced Animated Background
 const AnimatedBackground = () => {
   return (
@@ -203,6 +331,7 @@ const AnimatedBackground = () => {
               radial-gradient(circle at 40% 60%, rgba(16, 185, 129, 0.15) 0%, transparent 60%),
               radial-gradient(circle at 60% 40%, rgba(236, 72, 153, 0.1) 0%, transparent 60%)
             `,
+            willChange: 'transform, opacity'  
           }}
           animate={{
             scale: [1, 1.2, 1],
@@ -227,6 +356,7 @@ const AnimatedBackground = () => {
             height: `${Math.random() * 200 + 100}px`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
+            willChange: 'transform, opacity'
           }}
           animate={{
             y: [0, -100, 0],
@@ -278,18 +408,50 @@ const Navigation = ({ isOpen, setIsOpen }) => {
     { name: "Reports", path: "/reports", icon: Cpu, color: "from-orange-500 to-orange-600" },
   ]
 
-  useEffect(() => {
-    const handleResize = () => {
-      const mobile = window.innerWidth < 1024
-      setIsMobile(mobile)
-      if (!mobile) {
-        setIsOpen(false)
-      }
-    }
+  // Debounce function implementation
+function debounce(func, wait, immediate = false) {
+  let timeout;
+  
+  const debounced = function() {
+    const context = this;
+    const args = arguments;
+    
+    const later = function() {
+      timeout = null;
+      if (!immediate) func.apply(context, args);
+    };
+    
+    const callNow = immediate && !timeout;
+    
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    
+    if (callNow) func.apply(context, args);
+  };
+  
+  debounced.cancel = function() {
+    clearTimeout(timeout);
+    timeout = null;
+  };
+  
+  return debounced;
+}
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [setIsOpen])
+  useEffect(() => {
+    const handleResize = debounce(() => {  // Using debounce here
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setIsOpen(false);
+      }
+    }, 100);  // 100ms debounce delay
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      handleResize.cancel();  // Cancel any pending executions
+    };
+  }, [setIsOpen]);
 
   // Close menu when clicking outside on mobile
   useEffect(() => {

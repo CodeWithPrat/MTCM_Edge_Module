@@ -10,6 +10,7 @@ const MSGraph = () => {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showChart, setShowChart] = useState(false);
 
     const graphTypes = [
         'Energy Consumption (kWh)',
@@ -25,6 +26,26 @@ const MSGraph = () => {
         'Voltage (L-L)': { spindle: 'Em1_voltage', machine: 'Em2_voltage' },
         'Current (Avg)': { spindle: 'Em1_current', machine: 'Em2_current' },
         'Power Factor (Avg)': { spindle: 'Em1_PF', machine: 'Em2_PF' }
+    };
+
+    // Machine status calculation function
+    const getMachineStatus = (data) => {
+        if (data.length === 0) return { status: 'Off', color: 'bg-red-500' };
+        
+        const latestData = data[data.length - 1];
+        const currentValueEm1 = parseFloat(latestData.Em1_current) || 0;
+        const currentValueEm2 = parseFloat(latestData.Em2_current) || 0;
+        const avgCurrent = (currentValueEm1 + currentValueEm2) / 2;
+
+        if (avgCurrent === 0) {
+            return { status: 'Off', color: 'bg-red-500' };
+        } else if (avgCurrent > 0 && avgCurrent <= 1) {
+            return { status: 'Idle', color: 'bg-yellow-500' };
+        } else if (avgCurrent > 1 && avgCurrent <= 3) {
+            return { status: 'Running', color: 'bg-green-500' };
+        } else {
+            return { status: 'Machining', color: 'bg-blue-500' };
+        }
     };
 
     const fetchData = async () => {
@@ -76,6 +97,14 @@ const MSGraph = () => {
         fetchData();
     }, [selectedDate, startTime, endTime, graphType]);
 
+    // Effect to delay chart rendering
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowChart(true);
+        }, 100);
+        return () => clearTimeout(timer);
+    }, []);
+
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
@@ -91,6 +120,8 @@ const MSGraph = () => {
         }
         return null;
     };
+
+    const machineStatus = getMachineStatus(data);
 
     return (
         <div className="min-h-screen bg-black relative overflow-hidden mr-24">
@@ -140,7 +171,7 @@ const MSGraph = () => {
                                 className="w-full bg-brand-navy/50 border border-brand-purple/30 rounded-lg
              px-3 py-2 text-brand-white focus:outline-none
              focus:ring-2 focus:ring-brand-sky/50 transition-all duration-300"
-                                style={{ colorScheme: 'dark' }}   // ⬅️ built‑in icon turns white
+                                style={{ colorScheme: 'dark' }}
                             />
                         </div>
 
@@ -155,7 +186,7 @@ const MSGraph = () => {
                                 value={startTime}
                                 onChange={(e) => setStartTime(e.target.value)}
                                 className="w-full bg-brand-navy/50 border border-brand-purple/30 rounded-lg px-3 py-2 text-brand-white focus:outline-none focus:ring-2 focus:ring-brand-sky/50 transition-all duration-300"
-                                style={{ colorScheme: 'dark' }}   // ⬅️ built‑in icon turns white
+                                style={{ colorScheme: 'dark' }}
                             />
                         </div>
 
@@ -170,7 +201,7 @@ const MSGraph = () => {
                                 value={endTime}
                                 onChange={(e) => setEndTime(e.target.value)}
                                 className="w-full bg-brand-navy/50 border border-brand-purple/30 rounded-lg px-3 py-2 text-brand-white focus:outline-none focus:ring-2 focus:ring-brand-sky/50 transition-all duration-300"
-                                style={{ colorScheme: 'dark' }}   // ⬅️ built‑in icon turns white
+                                style={{ colorScheme: 'dark' }}
                             />
                         </div>
 
@@ -220,6 +251,10 @@ const MSGraph = () => {
                                 <div className="w-3 h-3 bg-brand-purple rounded-full mr-2"></div>
                                 <span className="text-brand-white">Machine Data</span>
                             </div>
+                            <div className="flex items-center">
+                                <div className={`w-3 h-3 ${machineStatus.color} rounded-full mr-2`}></div>
+                                <span className="text-brand-white">Status: {machineStatus.status}</span>
+                            </div>
                         </div>
                         <div className="text-brand-white/70">
                             {loading ? 'Loading...' : `${data.length} data points`}
@@ -240,9 +275,9 @@ const MSGraph = () => {
                         <div className="flex items-center justify-center h-96">
                             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-sky"></div>
                         </div>
-                    ) : data.length > 0 ? (
+                    ) : data.length > 0 && showChart ? (
                         <div className="h-96">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" debounce={200}>
                                 <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
                                     <XAxis
