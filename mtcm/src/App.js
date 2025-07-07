@@ -9,6 +9,7 @@ import MSTab from "./Components/MachineStatus/MSTabs";
 import Vibration from "./Components/Vibration/Vibration";
 import DIO from "./Components/Digital/DIO";
 import ETOP from "./Components/E-TOP/ETOP";
+import OEECalculator from "./Components/OEE/OEE";
 
 import CMTILogo from "./Images/logos/CMTILogo.png"
 import MHILogo from "./Images/logos/MHI3.png"
@@ -20,89 +21,7 @@ import product4 from "./Images/product/product4.PNG"
 import product5 from "./Images/product/product5.PNG"
 import product6 from "./Images/product/product6.PNG"
 
-// Add this before your ReactDOM.render() call
-window.addEventListener('error', function(e) {
-  if (e.message.includes('ResizeObserver')) {
-    e.preventDefault();
-    console.warn('ResizeObserver error suppressed:', e.message);
-    return false;
-  }
-});
 
-// Global ResizeObserver Error Suppression - Applied immediately
-const suppressResizeObserverErrors = (() => {
-  let isInitialized = false;
-  
-  return () => {
-    if (isInitialized) return;
-    isInitialized = true;
-
-    // Suppress console errors
-    const originalError = console.error;
-    console.error = (...args) => {
-      const message = args[0]?.toString() || '';
-      if (message.includes('ResizeObserver loop completed with undelivered notifications') ||
-          message.includes('ResizeObserver loop limit exceeded')) {
-        return;
-      }
-      originalError.apply(console, args);
-    };
-
-    // Handle window errors
-    const handleWindowError = (e) => {
-      if (e.message?.includes('ResizeObserver loop completed with undelivered notifications') ||
-          e.message?.includes('ResizeObserver loop limit exceeded')) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      }
-    };
-
-    window.addEventListener('error', handleWindowError);
-    window.addEventListener('unhandledrejection', (e) => {
-      if (e.reason?.message?.includes('ResizeObserver')) {
-        e.preventDefault();
-        return false;
-      }
-    });
-
-    // Override ResizeObserver to catch errors at the source
-    const OriginalResizeObserver = window.ResizeObserver;
-    window.ResizeObserver = class extends OriginalResizeObserver {
-      constructor(callback) {
-        super((entries, observer) => {
-          try {
-            callback(entries, observer);
-          } catch (error) {
-            if (error.message?.includes('ResizeObserver loop completed with undelivered notifications') ||
-                error.message?.includes('ResizeObserver loop limit exceeded')) {
-              return;
-            }
-            throw error;
-          }
-        });
-      }
-    };
-
-    // Additional protection with requestAnimationFrame
-    const originalRAF = window.requestAnimationFrame;
-    window.requestAnimationFrame = (callback) => {
-      return originalRAF(() => {
-        try {
-          callback();
-        } catch (error) {
-          if (error.message?.includes('ResizeObserver')) {
-            return;
-          }
-          throw error;
-        }
-      });
-    };
-  };
-})();
-
-// Initialize error suppression immediately
-suppressResizeObserverErrors();
 
 // iOS-style Global Styles
 const iOSStyles = `
@@ -1149,7 +1068,7 @@ const App = () => {
               { path: "/digital-io", element: <DIO /> },
               { path: "/etop-io", element: <ETOP /> },
               { path: "/sensors", name: "Sensors" },
-              { path: "/oee", name: "OEE Calculator" },
+              { path: "/oee", element: <OEECalculator /> },
               { path: "/reports", name: "Report Generation" },
             ].map((route) => (
               <Route
