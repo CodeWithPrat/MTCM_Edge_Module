@@ -103,6 +103,8 @@ const OEECalculator = () => {
     return { status: 'Poor', color: 'text-red-400', bg: 'bg-red-900/20' };
   };
 
+  
+
   const oeeStatus = getOEEStatus(results.oee);
 
   // ApexCharts Component
@@ -272,6 +274,134 @@ const OEECalculator = () => {
       size: 5
     }
   };
+
+  const OEELossAnalysis = ({ oee, availability, performance, quality }) => {
+  // Determine the major loss areas
+  const getMajorLosses = () => {
+    const losses = [];
+    
+    // Availability losses
+    if (availability < 85) {
+      const lossPercent = 100 - availability;
+      if (lossPercent > 10) {
+        losses.push({
+          type: 'Equipment Failure (Breakdowns)',
+          description: 'Unplanned stops due to equipment breakdowns or failures',
+          percentage: `${Math.round(lossPercent * 0.6)}-${Math.round(lossPercent * 0.8)}%`,
+          solution: 'Implement preventive maintenance, improve spare parts management, train operators on basic troubleshooting'
+        });
+      } else {
+        losses.push({
+          type: 'Setup and Adjustments',
+          description: 'Planned stops for setup, changeovers, tooling adjustments',
+          percentage: `${Math.round(lossPercent * 0.7)}-${Math.round(lossPercent * 0.9)}%`,
+          solution: 'Implement SMED (Single Minute Exchange of Die) techniques, standardize setup procedures'
+        });
+      }
+    }
+    
+    // Performance losses
+    if (performance < 85) {
+      const lossPercent = 100 - performance;
+      if (lossPercent > 15) {
+        losses.push({
+          type: 'Reduced Speed',
+          description: 'Running slower than the ideal cycle time',
+          percentage: `${Math.round(lossPercent * 0.5)}-${Math.round(lossPercent * 0.7)}%`,
+          solution: 'Optimize machine parameters, check for mechanical wear, review standard operating procedures'
+        });
+      } else {
+        losses.push({
+          type: 'Idling and Minor Stops',
+          description: 'Short stops (less than 10 minutes), machine idling, jams',
+          percentage: `${Math.round(lossPercent * 0.6)}-${Math.round(lossPercent * 0.8)}%`,
+          solution: 'Implement root cause analysis for frequent stops, improve material flow, operator training'
+        });
+      }
+    }
+    
+    // Quality losses
+    if (quality < 95) {
+      const lossPercent = 100 - quality;
+      if (lossPercent > 8) {
+        losses.push({
+          type: 'Process Defects (Scrap/Rework)',
+          description: 'Defects produced during steady-state production',
+          percentage: `${Math.round(lossPercent * 0.7)}-${Math.round(lossPercent * 0.9)}%`,
+          solution: 'Improve process control, implement statistical process control (SPC), operator quality training'
+        });
+      } else {
+        losses.push({
+          type: 'Reduced Yield (Startup Losses)',
+          description: 'Defects during startup, warm-up, or after changeovers',
+          percentage: `${Math.round(lossPercent * 0.5)}-${Math.round(lossPercent * 0.7)}%`,
+          solution: 'Optimize startup procedures, implement warm-up cycles, standardize changeover processes'
+        });
+      }
+    }
+    
+    return losses;
+  };
+
+  const majorLosses = getMajorLosses();
+  const oeeStatus = oee >= 85 ? 'World Class' : 
+                   oee >= 70 ? 'Good' : 
+                   oee >= 60 ? 'Fair' : 'Poor';
+
+  return (
+    <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-8">
+      <h3 className="text-xl font-semibold text-white mb-4">OEE Loss Analysis</h3>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-gray-300">Current OEE Status:</span>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+            oee >= 85 ? 'bg-green-900/20 text-green-400' :
+            oee >= 70 ? 'bg-blue-900/20 text-blue-400' :
+            oee >= 60 ? 'bg-yellow-900/20 text-yellow-400' :
+            'bg-red-900/20 text-red-400'
+          }`}>
+            {oeeStatus} (OEE: {oee}%)
+          </span>
+        </div>
+        <div className="w-full bg-gray-700 rounded-full h-4 mb-2">
+          <div 
+            className="h-4 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500" 
+            style={{ width: `${oee}%` }}
+          ></div>
+        </div>
+        <div className="flex justify-between text-xs text-gray-400">
+          <span>0%</span>
+          <span>100%</span>
+        </div>
+      </div>
+
+      {majorLosses.length > 0 ? (
+        <div className="space-y-4">
+          <h4 className="font-semibold text-red-400">Major Loss Areas Identified:</h4>
+          {majorLosses.map((loss, index) => (
+            <div key={index} className="bg-gray-700/50 border border-gray-600 rounded-lg p-4">
+              <div className="flex justify-between items-start mb-2">
+                <h5 className="font-medium text-yellow-400">{loss.type}</h5>
+                <span className="bg-red-900/20 text-red-400 px-2 py-1 rounded text-xs">
+                  {loss.percentage} loss
+                </span>
+              </div>
+              <p className="text-gray-300 text-sm mb-2">{loss.description}</p>
+              <p className="text-green-300 text-sm">
+                <span className="font-medium">Solution:</span> {loss.solution}
+              </p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-green-900/20 border border-green-700 rounded-lg p-4">
+          <h4 className="font-semibold text-green-400 mb-2">Excellent Performance</h4>
+          <p className="text-gray-300 text-sm">No major loss areas identified. Focus on continuous improvement and sustaining current performance levels.</p>
+        </div>
+      )}
+    </div>
+  );
+};
 
   // Analytics calculations
   const avgOEE = historicalData.reduce((sum, d) => sum + d.oee, 0) / historicalData.length;
@@ -516,6 +646,14 @@ const OEECalculator = () => {
           </div>
         </div>
 
+        {/* OEE Loss Analysis */}
+        <OEELossAnalysis 
+  oee={results.oee} 
+  availability={results.availability} 
+  performance={results.performance} 
+  quality={results.quality} 
+/>
+
         {/* Recommendations */}
         <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl p-6 mb-8">
           <h3 className="text-xl font-semibold text-white mb-4">Improvement Recommendations</h3>
@@ -546,6 +684,7 @@ const OEECalculator = () => {
             )}
           </div>
         </div>
+        
 
         {/* Footer */}
         <div className="text-center text-gray-400">
