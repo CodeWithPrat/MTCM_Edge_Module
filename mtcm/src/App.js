@@ -10,6 +10,8 @@ import Vibration from "./Components/Vibration/Vibration";
 import DIO from "./Components/Digital/DIO";
 import ETOP from "./Components/E-TOP/ETOP";
 import OEECalculator from "./Components/OEE/OEE";
+import Sensors from "./Components/Sensors/Sensors";
+import Report from "./Components/ReportGeneration/Report";
 
 import CMTILogo from "./Images/logos/CMTILogo.png"
 import MHILogo from "./Images/logos/MHI3.png"
@@ -1067,9 +1069,9 @@ const App = () => {
               { path: "/vibration", element: <Vibration /> },
               { path: "/digital-io", element: <DIO /> },
               { path: "/etop-io", element: <ETOP /> },
-              { path: "/sensors", name: "Sensors" },
+              { path: "/sensors", element: <Sensors /> },
               { path: "/oee", element: <OEECalculator /> },
-              { path: "/reports", name: "Report Generation" },
+              { path: "/reports", element: <Report /> },
             ].map((route) => (
               <Route
                 key={route.path}
