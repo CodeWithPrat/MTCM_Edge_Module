@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react"
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { ChevronLeft, ChevronRight, Menu, X, Thermometer, Zap, Activity, Cpu, BarChart3, Settings, Home, Radio, Cable, Shield, Wifi, Circle } from "lucide-react"
+import { ChevronLeft, ChevronRight, Menu,Maximize2, X,ZoomIn,ZoomOut, Download, Thermometer,Search, Zap, Activity, Cpu, BarChart3, Settings, Home, Radio, Cable, Shield, Wifi, Circle } from "lucide-react"
 
 import Tabs from "./Components/Temperature/Tabs";
 import MSTab from "./Components/MachineStatus/MSTabs";
@@ -671,8 +671,67 @@ const ProductCarousel = () => {
   )
 }
 
+
 // Enhanced Hero Section with iOS Design
 const HeroSection = () => {
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Using the cleaner URL format
+  const pdfUrl = 'https://mtcm-edge.online/Backend/MTCM_Report.pdf';
+
+  const handleZoomIn = () => {
+    if (zoomLevel < 200) {
+      setZoomLevel(prev => prev + 25);
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (zoomLevel > 50) {
+      setZoomLevel(prev => prev - 25);
+    }
+  };
+
+  const handleFitPage = () => {
+    setZoomLevel(100);
+  };
+
+  const handleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+  };
+
+  const handleClose = () => {
+    setIsViewerOpen(false);
+    setZoomLevel(100);
+    setSearchTerm('');
+    setIsSearchOpen(false);
+  };
+
+  const handleDownload = () => {
+    window.open(pdfUrl, '_blank');
+  };
+
+  // Add this function to handle documentation button click
+  const handleViewDocumentation = () => {
+    setIsViewerOpen(true);
+  };
+
+useEffect(() => {
+  /* Close on Escape */
+  const onKeyDown = (e) => {
+    if (e.key === "Escape") handleClose();
+  };
+
+  if (isViewerOpen) {
+    window.addEventListener("keydown", onKeyDown);
+  }
+
+  /* cleanup */
+  return () => window.removeEventListener("keydown", onKeyDown);
+}, [isViewerOpen, handleClose]);
+
   return (
     <section className="min-h-screen flex items-center justify-center relative overflow-hidden px-4 lg:px-8">
       <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
@@ -766,6 +825,7 @@ const HeroSection = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
           >
+            <Link to={"/temperature"}>
             <motion.button
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-2xl ios-shadow hover:shadow-2xl transition-all duration-300 ios-button relative overflow-hidden group"
               whileHover={{ scale: 1.02 }}
@@ -776,11 +836,13 @@ const HeroSection = () => {
                 className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               />
             </motion.button>
+            </Link>
 
             <motion.button
               className="px-8 py-4 glass-effect border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/10 transition-all duration-300 ios-button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={handleViewDocumentation}
             >
               View Documentation
             </motion.button>
@@ -788,6 +850,7 @@ const HeroSection = () => {
         </motion.div>
 
         {/* Right Side - Product Images */}
+        {!isViewerOpen && (
         <motion.div
           initial={{ opacity: 0, x: 100 }}
           animate={{ opacity: 1, x: 0 }}
@@ -795,7 +858,122 @@ const HeroSection = () => {
           className="order-first lg:order-last"
         >
           <ProductCarousel />
-        </motion.div>
+        </motion.div>)}
+        {isViewerOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          {/* PDF Viewer Modal */}
+          <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl h-5/6 flex flex-col overflow-hidden">
+            {/* Header with Controls */}
+            <div className="bg-gray-800 border-b border-gray-700 p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <h3 className="text-white font-semibold">MTCM Report Documentation</h3>
+                <span className="text-gray-400 text-sm">Zoom: {zoomLevel}%</span>
+              </div>
+              
+              {/* Search Bar */}
+              {isSearchOpen && (
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Search in document..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="bg-gray-700 text-white px-3 py-1 rounded border border-gray-600 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              )}
+
+              {/* Control Buttons */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleZoomOut}
+                  className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded transition-colors"
+                  title="Zoom Out"
+                >
+                  <ZoomOut size={18} />
+                </button>
+                
+                <button
+                  onClick={handleZoomIn}
+                  className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded transition-colors"
+                  title="Zoom In"
+                >
+                  <ZoomIn size={18} />
+                </button>
+                
+                <button
+                  onClick={handleFitPage}
+                  className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded transition-colors"
+                  title="Fit Page"
+                >
+                  <Maximize2 size={18} />
+                </button>
+                
+                <button
+                  onClick={handleSearch}
+                  className={`p-2 rounded transition-colors ${
+                    isSearchOpen 
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                      : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  }`}
+                  title="Search"
+                >
+                  <Search size={18} />
+                </button>
+                
+                <button
+                  onClick={handleDownload}
+                  className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded transition-colors"
+                  title="Download"
+                >
+                  <Download size={18} />
+                </button>
+                
+                <button
+                  onClick={handleClose}
+                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded transition-colors"
+                  title="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* PDF Content Area */}
+            <div className="flex-1 bg-gray-900 p-4 overflow-auto">
+              <div className="flex justify-center">
+                <div 
+                  className="bg-white shadow-2xl rounded-lg overflow-hidden"
+                  style={{
+                    transform: `scale(${zoomLevel / 100})`,
+                    transformOrigin: 'top center',
+                    transition: 'transform 0.2s ease-in-out'
+                  }}
+                >
+                  <iframe
+                    src={pdfUrl}
+                    className="w-full h-full"
+                    style={{
+                      width: '800px',
+                      height: '600px',
+                      border: 'none'
+                    }}
+                    title="PDF Document"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-800 border-t border-gray-700 px-4 py-2">
+              <div className="flex justify-between items-center text-sm text-gray-400">
+                <span>Use mouse wheel + Ctrl to zoom, or use the zoom buttons above</span>
+                <span>Press Esc to close</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </section>
   )
