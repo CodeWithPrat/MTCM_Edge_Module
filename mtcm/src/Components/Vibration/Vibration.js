@@ -60,7 +60,7 @@ const Vibration = () => {
   // Fetch vibration data
   const fetchVibrationData = async () => {
     try {
-      const response = await fetch('https://mtcm-edge.online/Backend/mtcmedge.php');
+      const response = await fetch('https://cmti-edge.online/mtcm/Backend/mtcmedge.php');
       const data = await response.json();
       
       if (data.success) {
@@ -87,7 +87,7 @@ const Vibration = () => {
   const fetchFFTData = async (date = null) => {
     try {
       setLoading(true);
-      let url = 'https://mtcm-edge.online/Backend/VibrationFFT.php';
+      let url = 'https://cmti-edge.online/mtcm/Backend/VibrationFFT.php';
       if (date) {
         url += `?date=${date}`;
       } else {

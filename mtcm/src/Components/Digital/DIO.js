@@ -5,10 +5,10 @@ const DIO = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
-
+                                                                                                                    
   const fetchData = async () => {
     try {
-      const response = await fetch('https://mtcm-edge.online/Backend/mtcmedge.php');
+      const response = await fetch('https://cmti-edge.online/mtcm/Backend/mtcmedge.php');
       if (!response.ok) {
         throw new Error('Failed to fetch data');
       }
@@ -39,9 +39,7 @@ const DIO = () => {
         {label}
       </span>
       <div className="flex items-center space-x-3">
-        <div className={`w-4 h-4 rounded-full ${status === '1' ? 'bg-green-500' : 'bg-red-500'} 
-                       shadow-lg ${status === '1' ? 'shadow-green-500/50' : 'shadow-red-500/50'} 
-                       animate-pulse`}>
+        <div className={`w-4 h-4 rounded-full ${status === '1' ? 'bg-green-500' : 'bg-red-500'} shadow-lg ${status === '1' ? 'shadow-green-500/50' : 'shadow-red-500/50'} animate-pulse`}>
         </div>
         <span className={`text-sm font-bold ${status === '1' ? 'text-green-400' : 'text-red-400'}`}>
           {status === '1' ? 'ON' : 'OFF'}

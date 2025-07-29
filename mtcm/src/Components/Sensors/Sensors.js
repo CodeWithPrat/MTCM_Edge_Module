@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Zap, Activity, Gauge, TrendingUp } from "lucide-react";
 
-const API_URL = "https://mtcm-edge.online/Backend/mtcmedge.php";
+const API_URL = "https://cmti-edge.online/mtcm/Backend/mtcmedge.php";
 const REFRESH_MS = 5000;
 
 const Sensors = () => {

@@ -53,7 +53,7 @@ const MSGraph = () => {
         setError('');
 
         try {
-            const response = await fetch(`https://mtcm-edge.online/Backend/tempgraph.php?date=${selectedDate}`);
+            const response = await fetch(`https://cmti-edge.online/mtcm/Backend/tempgraph.php?date=${selectedDate}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

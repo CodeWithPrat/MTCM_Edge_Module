@@ -680,7 +680,7 @@ const HeroSection = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Using the cleaner URL format
-  const pdfUrl = 'https://mtcm-edge.online/Backend/MTCM_Report.pdf';
+  const pdfUrl = 'https://cmti-edge.online/mtcm/Backend/MTCM.pdf';
 
   const handleZoomIn = () => {
     if (zoomLevel < 200) {

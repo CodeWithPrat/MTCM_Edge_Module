@@ -16,7 +16,7 @@ const TempGraph = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   // Your actual API endpoint
-  const API_BASE_URL = 'https://mtcm-edge.online/Backend/tempgraph.php';
+  const API_BASE_URL = 'https://cmti-edge.online/mtcm/Backend/tempgraph.php';
 
   const fetchGraphData = useCallback(async () => {
     setLoading(true);

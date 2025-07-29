@@ -85,7 +85,7 @@ const ETOP = () => {
       abortRef.current = controller;
 
       const res = await fetch(
-        "https://mtcm-edge.online/Backend/mtcmedge.php",
+        "https://cmti-edge.online/mtcm/Backend/mtcmedge.php",
         { signal: controller.signal }
       );
 

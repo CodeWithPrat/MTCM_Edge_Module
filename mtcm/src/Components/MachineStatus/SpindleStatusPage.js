@@ -125,7 +125,7 @@ const SpindleMSTab = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://mtcm-edge.online/Backend/mtcmedge.php");
+      const response = await fetch("https://cmti-edge.online/mtcm/Backend/mtcmedge.php");
       const data = await response.json();
 
       if (!unmountedRef.current) {

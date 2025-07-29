@@ -207,7 +207,7 @@ const Temperature = () => {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('https://mtcm-edge.online/Backend/mtcmedge.php');
+      const response = await fetch('https://cmti-edge.online/mtcm/Backend/mtcmedge.php');
       const result = await response.json();
       
       if (result.success) {

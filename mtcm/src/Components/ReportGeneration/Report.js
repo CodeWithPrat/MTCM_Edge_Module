@@ -37,11 +37,11 @@ const Report = () => {
   const fetchData = async (date) => {
     try {
       // Fetch temperature and sensor data
-      const tempResponse = await fetch(`https://mtcm-edge.online/Backend/tempgraph.php?date=${date}`);
+      const tempResponse = await fetch(`https://cmti-edge.online/mtcm/Backend/tempgraph.php?date=${date}`);
       const tempData = await tempResponse.json();
       
       // Fetch FFT data
-      const fftResponse = await fetch(`https://mtcm-edge.online/Backend/VibrationFFT.php?date=${date}`);
+      const fftResponse = await fetch(`https://cmti-edge.online/mtcm/Backend/VibrationFFT.php?date=${date}`);
       const fftResult = await fftResponse.json();
       
       if (tempData && tempData.length > 0) {
